@@ -1,5 +1,6 @@
 #include "video.h"
 
+#include <SDL/SDL_main.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_framerate.h>
 
