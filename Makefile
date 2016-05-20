@@ -1,6 +1,6 @@
 CC=cc
 BIN_DIR=/usr/bin
-LDFLAGS=`sdl-config --cflags --libs`
+LDFLAGS=`sdl-config --cflags --libs` -lSDL2_gfx
 INCLUDES=-I./include
 
 INSTALL=/usr/bin/install -c

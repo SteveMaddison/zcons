@@ -1,49 +1,49 @@
 #include <stdio.h>
-#include <unistd.h>
 #include "memory.h"
 #include "video.h"
 #include "vpu.h"
 
 int main(int argc, char* argv[]) {
   int i = 0;
+  unsigned int frame = 0;
 
   video_init();
 
   memory_init();
   vpu_init();
 
-  memory_write(0x0000, 0x33);
-  memory_write(0x0001, 0x33);
-  memory_write(0x0002, 0x33);
-  memory_write(0x0003, 0x33);
+  memory_write(0x0000, 0x11);
+  memory_write(0x0001, 0x11);
+  memory_write(0x0002, 0x11);
+  memory_write(0x0003, 0x11);
 
-  memory_write(0x0004, 0x30);
-  memory_write(0x0007, 0x03);
+  memory_write(0x0010, 0x22);
+  memory_write(0x0011, 0x22);
+  memory_write(0x0012, 0x22);
+  memory_write(0x0013, 0x22);
 
-  memory_write(0x0008, 0x30);
-  memory_write(0x000b, 0x03);
+  memory_write(0x0020, 0x33);
+  memory_write(0x0021, 0x33);
+  memory_write(0x0022, 0x33);
+  memory_write(0x0023, 0x33);
 
-  memory_write(0x000c, 0x30);
-  memory_write(0x000f, 0x03);
+  memory_write(0x0030, 0x44);
+  memory_write(0x0031, 0x44);
+  memory_write(0x0032, 0x44);
+  memory_write(0x0033, 0x44);
 
-  memory_write(0x0010, 0x30);
-  memory_write(0x0013, 0x03);
+  for (i = VRAM_BASE; i < VRAM_BASE+VRAM_SIZE ; i++) {
+    memory_write(i, i % 4);
+  }
 
-  memory_write(0x0014, 0x30);
-  memory_write(0x0017, 0x03);
+  for (frame = 0 ; frame < 120 ; frame++) {
+    //memory_write(VRAM_BASE+frame, 0x01);
 
-  memory_write(0x0018, 0x30);
-  memory_write(0x001b, 0x03);
+    vpu_draw_screen();
 
-  memory_write(0x001c, 0x33);
-  memory_write(0x001d, 0x33);
-  memory_write(0x001e, 0x33);
-  memory_write(0x001f, 0x33);
-
-  vpu_draw_screen();
-  video_flip();
-
-  sleep(1);
+    video_flip();
+    video_wait_frame();
+  }
 
   return 0;
 }

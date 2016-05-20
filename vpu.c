@@ -31,7 +31,7 @@ static uint8_t palette_data[16] = {
 #define VPU_SCREEN_TILES_Y  30
 #define VPU_BITS_PER_PIXEL  4
 #define VPU_PIXELS_PER_BYTE (8/(VPU_BITS_PER_PIXEL))
-#define VPU_BYTES_PER_TILE  (((VPU_SCREEN_TILES_X)*(VPU_SCREEN_TILES_Y))/VPU_BITS_PER_PIXEL)
+#define VPU_BYTES_PER_TILE  (((VPU_TILE_WIDTH)*(VPU_TILE_HEIGHT))/(VPU_PIXELS_PER_BYTE))
 
 int vpu_init() {
   return 0;

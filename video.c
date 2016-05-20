@@ -1,5 +1,8 @@
 #include "video.h"
 
+#include <SDL/SDL.h>
+#include <SDL/SDL_framerate.h>
+
 static SDL_Surface *surface = NULL;
 static SDL_VideoInfo saved_video;
 
@@ -9,6 +12,7 @@ static const int SDL_SCREEN_HEIGHT = 240;
 static const int MAX_FRAME_RATE = 60;
 static const char *title = "Emu";
 static int frame_rate = 60;
+static FPSmanager manager;
 
 int video_init() {
   int mode = SDL_SWSURFACE;
@@ -30,6 +34,8 @@ int video_init() {
     return 1;
   }
 
+  SDL_initFramerate(&manager);
+
   if (frame_rate < 0) {
     frame_rate = 0;
     fprintf( stderr, "Warning: Negative frame rate, setting to 0 (unlimited)\n" );
@@ -37,6 +43,9 @@ int video_init() {
   if (frame_rate > MAX_FRAME_RATE) {
     frame_rate = MAX_FRAME_RATE;
     fprintf( stderr, "Warning: Frame rate above maximum allowed (%d) setting to maximum\n", MAX_FRAME_RATE );
+  }
+  if (frame_rate) {
+    SDL_setFramerate(&manager, frame_rate);
   }
 
   SDL_WM_SetCaption( title, NULL );
@@ -52,3 +61,10 @@ void video_set_pixel(unsigned int x, unsigned int y, uint32_t pixel) {
 void video_flip() {
   SDL_Flip(surface);
 }
+
+void video_wait_frame() {
+  if (frame_rate) {
+    SDL_framerateDelay(&manager);
+  }
+}
+
