@@ -1,13 +1,13 @@
 #include "video.h"
 
-#include <SDL/SDL_main.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_framerate.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_framerate.h>
 
-static SDL_Surface *surface = NULL;
-static SDL_VideoInfo saved_video;
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
+static Uint32 *pixels;
 
-static const int SDL_SCREEN_BPP = 32;
 static const int SDL_SCREEN_WIDTH = 320;
 static const int SDL_SCREEN_HEIGHT = 240;
 static const int MAX_FRAME_RATE = 60;
@@ -23,17 +23,29 @@ int video_init() {
     return 1;
   }
 
-  /* SDL_ShowCursor(SDL_DISABLE); */
-  memcpy(&saved_video, SDL_GetVideoInfo(), sizeof(SDL_VideoInfo));
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-  /* mode |= SDL_FULLSCREEN; */
-
-  surface = SDL_SetVideoMode(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SDL_SCREEN_BPP, mode);
-  if (surface == NULL) {
-    fprintf(stderr, "Error: Unable to set video mode: %s\n", SDL_GetError());
+  window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+               SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, 0);
+  if (window == NULL) {
+    fprintf(stderr, "Error: Unable to create window: %s\n", SDL_GetError());
     return 1;
   }
+
+  renderer = SDL_CreateRenderer(window, -1, 0);
+  if (renderer == NULL) {
+    fprintf(stderr, "Error: Unable to create renderer: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  texture = SDL_CreateTexture(renderer,
+    SDL_PIXELFORMAT_RGBA8888,
+    SDL_TEXTUREACCESS_STREAMING,
+    SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT);
+  if (texture == NULL) {
+    fprintf(stderr, "Error: Unable to create texture: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  pixels = malloc(SDL_SCREEN_WIDTH * SDL_SCREEN_HEIGHT * sizeof(Uint32));
 
   SDL_initFramerate(&manager);
 
@@ -49,18 +61,19 @@ int video_init() {
     SDL_setFramerate(&manager, frame_rate);
   }
 
-  SDL_WM_SetCaption( title, NULL );
-
   return 0;
 }
 
 void video_set_pixel(unsigned int x, unsigned int y, uint32_t pixel) {
-  Uint8 *target_pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel;
-  *(Uint32 *)target_pixel = pixel;
+  pixels[(SDL_SCREEN_WIDTH*y) + x] = pixel;
 }
 
 void video_flip() {
-  SDL_Flip(surface);
+  SDL_UpdateTexture(texture, NULL, pixels, SDL_SCREEN_WIDTH * sizeof(Uint32));
+
+  SDL_RenderClear(renderer);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
 }
 
 void video_wait_frame() {

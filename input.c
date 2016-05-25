@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #define INPUT_KEY_QUIT     SDLK_ESCAPE
 
@@ -19,10 +19,10 @@
 #define INPUT_KEY_P2_DOWN  SDLK_DOWN
 #define INPUT_KEY_P2_LEFT  SDLK_LEFT
 #define INPUT_KEY_P2_RIGHT SDLK_RIGHT
-#define INPUT_KEY_P2_A     SDLK_KP1
-#define INPUT_KEY_P2_B     SDLK_KP2
-#define INPUT_KEY_P2_C     SDLK_KP3
-#define INPUT_KEY_P2_START SDLK_KP0
+#define INPUT_KEY_P2_A     SDLK_KP_1
+#define INPUT_KEY_P2_B     SDLK_KP_2
+#define INPUT_KEY_P2_C     SDLK_KP_3
+#define INPUT_KEY_P2_START SDLK_KP_0
 
 #define INPUT_STATUS_UP    0x01
 #define INPUT_STATUS_DOWN  0x02
@@ -33,16 +33,21 @@
 #define INPUT_STATUS_B     0x08
 #define INPUT_STATUS_C     0x10
 
-int quit = 0;
-
-uint8_t controller_status[INPUT_CONTROLLERS][2];
+static int quit = 0;
+static uint8_t controller_status[INPUT_CONTROLLERS][2];
 
 void input_init() {
   memset(controller_status, 0, sizeof(controller_status));
 }
 
 void input_process_key(SDL_KeyboardEvent *key) {
-  printf("KEY\n");
+  if (key == NULL) {
+    return;
+  }
+
+  if (key->keysym.sym == INPUT_KEY_QUIT ) {
+    quit = 1;
+  }
 
   if (key->type == SDL_KEYDOWN) {
     switch (key->keysym.sym) {
@@ -107,57 +112,57 @@ void input_process_key(SDL_KeyboardEvent *key) {
   else if (key->type == SDL_KEYUP) {
     switch (key->keysym.sym) {
       /* P1 */
-      INPUT_KEY_P1_UP:
+      case INPUT_KEY_P1_UP:
         controller_status[0][0] &= ~INPUT_STATUS_UP;
         controller_status[0][1] &= ~INPUT_STATUS_UP;
         break;;
-      INPUT_KEY_P1_DOWN:
+      case INPUT_KEY_P1_DOWN:
         controller_status[0][0] &= ~INPUT_STATUS_DOWN;
         controller_status[0][1] &= ~INPUT_STATUS_DOWN;
         break;;
-      INPUT_KEY_P1_LEFT:
+      case INPUT_KEY_P1_LEFT:
         controller_status[0][1] &= ~INPUT_STATUS_LEFT;
         break;;
-      INPUT_KEY_P1_RIGHT:
+      case INPUT_KEY_P1_RIGHT:
         controller_status[0][1] &= ~INPUT_STATUS_RIGHT;
         break;;
-      INPUT_KEY_P1_A:
+      case INPUT_KEY_P1_A:
         controller_status[0][0] &= ~INPUT_STATUS_A;
         break;;
-      INPUT_KEY_P1_B:
+      case INPUT_KEY_P1_B:
         controller_status[0][1] &= ~INPUT_STATUS_B;
         break;;
-      INPUT_KEY_P1_C:
+      case INPUT_KEY_P1_C:
         controller_status[0][1] &= ~INPUT_STATUS_C;
         break;;
-      INPUT_KEY_P1_START:
+      case INPUT_KEY_P1_START:
         controller_status[0][0] &= ~INPUT_STATUS_START;
         break;;
       /* P2 */
-      INPUT_KEY_P2_UP:
+      case INPUT_KEY_P2_UP:
         controller_status[1][0] &= ~INPUT_STATUS_UP;
         controller_status[1][1] &= ~INPUT_STATUS_UP;
         break;;
-      INPUT_KEY_P2_DOWN:
+      case INPUT_KEY_P2_DOWN:
         controller_status[1][0] &= ~INPUT_STATUS_DOWN;
         controller_status[1][1] &= ~INPUT_STATUS_DOWN;
         break;;
-      INPUT_KEY_P2_LEFT:
+      case INPUT_KEY_P2_LEFT:
         controller_status[1][1] &= ~INPUT_STATUS_LEFT;
         break;;
-      INPUT_KEY_P2_RIGHT:
+      case INPUT_KEY_P2_RIGHT:
         controller_status[1][1] &= ~INPUT_STATUS_RIGHT;
         break;;
-      INPUT_KEY_P2_A:
+      case INPUT_KEY_P2_A:
         controller_status[1][0] &= ~INPUT_STATUS_A;
         break;;
-      INPUT_KEY_P2_B:
+      case INPUT_KEY_P2_B:
         controller_status[1][1] &= ~INPUT_STATUS_B;
         break;;
-      INPUT_KEY_P2_C:
+      case INPUT_KEY_P2_C:
         controller_status[1][1] &= ~INPUT_STATUS_C;
         break;;
-      INPUT_KEY_P2_START:
+      case INPUT_KEY_P2_START:
         controller_status[1][0] &= ~INPUT_STATUS_START;
         break;;
       default:
@@ -170,8 +175,6 @@ void input_process() {
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {
-    printf("EVENT %d\n", event.type);
-
     switch (event.type) {
       case SDL_QUIT:
         quit = 1;

@@ -17,6 +17,11 @@ int main(int argc, char* argv[]) {
   memory_init();
   vpu_init();
 
+  memory_write(0x0000, 0x11);
+  memory_write(0x0001, 0x11);
+  memory_write(0x0002, 0x11);
+  memory_write(0x0003, 0x11);
+
   while (input_quit() == 0) {
     vpu_draw_screen();
 
