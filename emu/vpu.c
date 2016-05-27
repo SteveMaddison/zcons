@@ -29,7 +29,8 @@ static uint8_t palette_data[16] = {
 #define VPU_TILE_HEIGHT     8
 #define VPU_SCREEN_TILES_X  40
 #define VPU_SCREEN_TILES_Y  30
-#define VPU_BITS_PER_PIXEL  4
+
+#define VPU_BITS_PER_PIXEL  8
 #define VPU_PIXELS_PER_BYTE (8/(VPU_BITS_PER_PIXEL))
 #define VPU_BYTES_PER_TILE  (((VPU_TILE_WIDTH)*(VPU_TILE_HEIGHT))/(VPU_PIXELS_PER_BYTE))
 
@@ -52,6 +53,32 @@ void vpu_draw_line(unsigned int line) {
 
   switch (video_mode) {
     case 0: {
+      /* First tile in the row. */
+      vram_address += tile_row * VPU_SCREEN_TILES_X;
+
+      for (tile_x = 0; tile_x < VPU_SCREEN_TILES_X; tile_x++) {
+        tile_address =  (memory_read(vram_address) * VPU_BYTES_PER_TILE);
+        tile_address += (tile_offset * (VPU_TILE_WIDTH/VPU_PIXELS_PER_BYTE));
+        tile_address |= tileset_offset << VPU_TILESET_BITS;
+
+        for (tile_pixel_segment = 0; tile_pixel_segment < (VPU_TILE_WIDTH/VPU_PIXELS_PER_BYTE) ; tile_pixel_segment++ ) {
+          pixel_data = memory_read(tile_address);
+          pixel = (
+            ((((pixel_data & 0xc0) >> 6) * 0x55) << 8 ) |
+            ((((pixel_data & 0x3c) >> 4) * 0x55) << 16) |
+            ((((pixel_data & 0x0c) >> 2) * 0x55) << 24)
+          );
+          video_set_pixel(pixel_x, line, pixel);
+          pixel_x++;
+
+          tile_address++;
+        }
+
+        vram_address++;
+      }
+      break;;
+    }
+    case 1: {
       /* First tile in the row. */
       vram_address += tile_row * VPU_SCREEN_TILES_X;
 

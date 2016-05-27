@@ -7,7 +7,6 @@
 #define VPU_TILE_HEIGHT    8
 #define VPU_SCREEN_TILES_X 40
 #define VPU_SCREEN_TILES_Y 30
-#define VPU_BITS_PER_PIXEL 4
 
 int vpu_init();
 void vpu_draw_line(unsigned int line);
