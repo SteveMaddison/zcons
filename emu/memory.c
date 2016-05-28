@@ -11,6 +11,24 @@ int memory_init() {
   return 0;
 }
 
+int memory_load(char *filename) {
+  FILE *f = NULL;
+  int rom_size = 0;
+
+  f = fopen(filename, "rb");
+  if (f == NULL) {
+    return -1;
+  }
+
+  fseek(f, 0, SEEK_END);
+  rom_size = ftell(f);
+
+  fseek(f, 0, SEEK_SET);
+  fread(memory, rom_size, 1, f);
+
+  return rom_size;
+}
+
 uint8_t memory_read(unsigned int address) {
   return memory[address];
 }

@@ -11,6 +11,7 @@
 
 int memory_init();
 
+int memory_load(char *filename);
 uint8_t memory_read(unsigned int address);
 void memory_write(unsigned int address, uint8_t data);
 
