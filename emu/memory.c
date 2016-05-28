@@ -34,5 +34,5 @@ uint8_t memory_read(unsigned int address) {
 }
 
 void memory_write(unsigned int address, uint8_t data) {
-  memory[address] = data;
+  memory[address & (MEMORY_SIZE-1)] = data;
 }

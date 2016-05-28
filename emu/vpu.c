@@ -2,7 +2,7 @@
 #include "video.h"
 #include "memory.h"
 
-static unsigned int tileset_offset = 0;
+static unsigned int tileset_offset = 1;
 static unsigned int video_mode = 0;
 static uint8_t palette_data[16] = {
   0x00,
@@ -23,7 +23,7 @@ static uint8_t palette_data[16] = {
   0xfc,
 };
 
-#define VPU_TILESET_BITS    8
+#define VPU_TILESET_BITS    14
 #define VPU_TILESET_SIZE    (1<<(TILESET_BITS))
 #define VPU_TILE_WIDTH      8
 #define VPU_TILE_HEIGHT     8
@@ -64,9 +64,9 @@ void vpu_draw_line(unsigned int line) {
         for (tile_pixel_segment = 0; tile_pixel_segment < (VPU_TILE_WIDTH/VPU_PIXELS_PER_BYTE) ; tile_pixel_segment++ ) {
           pixel_data = memory_read(tile_address);
           pixel = (
-            ((((pixel_data & 0xc0) >> 6) * 0x55) << 8 ) |
+            ((((pixel_data & 0xc0) >> 6) * 0x55) << 24) |
             ((((pixel_data & 0x3c) >> 4) * 0x55) << 16) |
-            ((((pixel_data & 0x0c) >> 2) * 0x55) << 24)
+            ((((pixel_data & 0x0c) >> 2) * 0x55) << 8)
           );
           video_set_pixel(pixel_x, line, pixel);
           pixel_x++;
