@@ -27,12 +27,12 @@
 
 #define INPUT_STATUS_UP    0x01
 #define INPUT_STATUS_DOWN  0x02
-#define INPUT_STATUS_LEFT  0x03
-#define INPUT_STATUS_RIGHT 0x04
-#define INPUT_STATUS_A     0x08
-#define INPUT_STATUS_START 0x10
-#define INPUT_STATUS_B     0x08
-#define INPUT_STATUS_C     0x10
+#define INPUT_STATUS_LEFT  0x04
+#define INPUT_STATUS_RIGHT 0x08
+#define INPUT_STATUS_A     0x10
+#define INPUT_STATUS_START 0x20
+#define INPUT_STATUS_B     0x10
+#define INPUT_STATUS_C     0x20
 
 static int quit = 0;
 static uint8_t controller_status[INPUT_CONTROLLERS][2];

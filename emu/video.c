@@ -8,8 +8,8 @@ static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 static Uint32 *pixels;
 
-static const int SDL_SCREEN_WIDTH = 320;
-static const int SDL_SCREEN_HEIGHT = 240;
+static const int VIDEO_SCREEN_WIDTH = 320;
+static const int VIDEO_SCREEN_HEIGHT = 240;
 static const int MAX_FRAME_RATE = 60;
 static const char *title = "Emu";
 static int frame_rate = 60;
@@ -24,7 +24,7 @@ int video_init() {
   }
 
   window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-               SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, 0);
+               VIDEO_SCREEN_WIDTH*2, VIDEO_SCREEN_HEIGHT*2, 0);
   if (window == NULL) {
     fprintf(stderr, "Error: Unable to create window: %s\n", SDL_GetError());
     return 1;
@@ -39,13 +39,13 @@ int video_init() {
   texture = SDL_CreateTexture(renderer,
     SDL_PIXELFORMAT_RGBA8888,
     SDL_TEXTUREACCESS_STREAMING,
-    SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT);
+    VIDEO_SCREEN_WIDTH, VIDEO_SCREEN_HEIGHT);
   if (texture == NULL) {
     fprintf(stderr, "Error: Unable to create texture: %s\n", SDL_GetError());
     return 1;
   }
 
-  pixels = malloc(SDL_SCREEN_WIDTH * SDL_SCREEN_HEIGHT * sizeof(Uint32));
+  pixels = malloc(VIDEO_SCREEN_WIDTH * VIDEO_SCREEN_HEIGHT * sizeof(Uint32));
 
   SDL_initFramerate(&manager);
 
@@ -65,11 +65,11 @@ int video_init() {
 }
 
 void video_set_pixel(unsigned int x, unsigned int y, uint32_t pixel) {
-  pixels[(SDL_SCREEN_WIDTH*y) + x] = pixel;
+  pixels[(VIDEO_SCREEN_WIDTH*y) + x] = pixel;
 }
 
 void video_flip() {
-  SDL_UpdateTexture(texture, NULL, pixels, SDL_SCREEN_WIDTH * sizeof(Uint32));
+  SDL_UpdateTexture(texture, NULL, pixels, VIDEO_SCREEN_WIDTH * sizeof(Uint32));
 
   SDL_RenderClear(renderer);
   SDL_RenderCopy(renderer, texture, NULL, NULL);
