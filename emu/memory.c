@@ -30,15 +30,15 @@ int memory_load(char *filename) {
 }
 
 uint8_t memory_read(unsigned int address) {
-  if (address >= 0xff00) {
+/*if (address >= 0xff00) {
     printf("< %04x %02x (%d)\n", address & (MEMORY_SIZE-1), memory[address& (MEMORY_SIZE-1)], memory[address& (MEMORY_SIZE-1)]);
-  }
+  }*/
   return memory[address & (MEMORY_SIZE-1)];
 }
 
 void memory_write(unsigned int address, uint8_t data) {
-  if (address >= 0xf000) {
+/*if (address >= 0xf000) {
     printf("> %04x %02x (%d)\n", address, data, data);
-  }
+  }*/
   memory[address & (MEMORY_SIZE-1)] = data;
 }
