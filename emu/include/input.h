@@ -5,6 +5,8 @@
 
 #define INPUT_CONTROLLERS 2
 
+#define INPUT_CONTROLLER_BASE 0x20
+
 void input_init();
 void input_process();
 int input_quit();

@@ -6,6 +6,8 @@
  * This program is free, do whatever you want with it.
  */
 
+#include <stdio.h>
+
 #ifndef __Z80_INCLUDED__
 
 #ifdef __cplusplus
@@ -246,7 +248,7 @@ typedef struct {
 
 #define Z80_FETCH_WORD(address, x)                                      \
 {                                                                       \
-        (x) = memory_read(address) | memory_read((address + 1) << 8);   \
+        (x) = memory_read(address) | memory_read((address + 1)) << 8;   \
 }
 
 #define Z80_READ_BYTE(address, x)                                       \
@@ -261,12 +263,12 @@ typedef struct {
 
 #define Z80_READ_WORD(address, x)                                       \
 {                                                                       \
-        (x) = memory_read(address) | memory_read((address + 1) << 8);   \
+        (x) = memory_read(address) | memory_read((address + 1)) << 8;   \
 }
 
 #define Z80_WRITE_WORD(address, x)                                      \
 {                                                                       \
-        memory_write(address, (x) & 0xff);                              \
+        memory_write(address, (x));                                     \
         memory_write((address + 1), (x) >> 8);                          \
 }
 

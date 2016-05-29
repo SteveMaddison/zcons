@@ -7,7 +7,7 @@
 #include "z80emu/z80emu.h"
 
 #define Z80_CPU_SPEED       (20 * 1000 * 1000) /* In Hz. */
-#define Z80_CYCLES_PER_STEP (Z80_CPU_SPEED / 50)
+#define Z80_CYCLES_PER_STEP (Z80_CPU_SPEED / 60 / 100)
 Z80_STATE z80_state;
 
 int main(int argc, char* argv[]) {
