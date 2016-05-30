@@ -6,6 +6,15 @@
 tile_letter_a:	equ 	18
 tile_number_0:	equ 	54
 
+tile_border_tl:	equ	1
+tile_border_lr:	equ	2
+tile_border_tr:	equ	3
+tile_border_tb:	equ	4
+tile_border_bl:	equ	5
+tile_border_br:	equ	6
+tile_border_sr:	equ	7
+tile_border_sl:	equ	8
+
 ; Controller staes
 control_up:	equ	0x01
 control_down:	equ	0x02
@@ -43,16 +52,17 @@ txt_game_over:	defm	"GAME OVER\0"
 txt_high_scores:
 		defm	"HIGH SCORES\0"
 txt_ready:	defm	"READY\0"
+txt_score:	defm	"SCORE XXXXXXXX\0"
+txt_high:	defm	"HIGH XXXXXXXX\0"
 
 pad_to_nim:	defm	"0123456789"
-		defm	"0123456789"
-		defm	"0123456789"
-		defm	"012345678"
 
 ; 0x0066
 nmi_handler:
 		retn
 start:
+		ld	a,0
+		call	clear_vram
 draw_logo:
 		ld      hl,vram_base		; get start P1 map
 		ld	de,screen_cols*10
@@ -78,7 +88,10 @@ write_push_start:
 
 		ld	b,30
 loop_written:
-		call	wait_for_vsync
+		call	wait_vsync
+		in	a,(p1_port_l)
+		and	a,control_start
+		jp	nz,start_pushed
 		djnz	loop_written
 clear_push_start:
 		ld      hl,vram_base		; clear text
@@ -95,10 +108,94 @@ clear_letter:
 
 		ld	b,30
 loop_cleared:
-		call	wait_for_vsync
+		call	wait_vsync
+		in	a,(p1_port_l)
+		and	a,control_start
+		jp	nz,start_pushed
 		djnz	loop_cleared
 
 		jp	flash_push_start
+
+; Draw border, animated.
+;+== SCORE 00000000 (=) HIGH 00000000 ==+
+;0123456789012345678901234567890123456789
+start_pushed:
+		call	wait_vsync
+		ld	a,0
+		call	clear_vram
+draw_border:
+		ld	hl,vram_base+2
+		ld	de,vram_base+screen_cols-3
+		ld	(hl),tile_border_sr
+		ld	a,tile_border_sl
+		ld	(de),a
+		call	wait_vsync
+
+		dec	hl
+		inc	de
+		ld	(hl),tile_border_lr
+		ld	a,tile_border_lr
+		ld	(de),a
+		call	wait_vsync
+
+		dec	hl
+		inc	de
+		ld	(hl),tile_border_tl
+		ld	a,tile_border_tr
+		ld	(de),a
+
+		ld	b,screen_rows-2
+		ld	hl,vram_base+screen_cols
+		ld	de,screen_cols
+draw_border_down:
+		call	wait_vsync
+		ld	(hl),tile_border_tb
+		add	hl,de
+		dec	hl
+		ld	(hl),tile_border_tb
+		inc	hl
+		djnz	draw_border_down
+draw_border_bottom_corners:
+		call	wait_vsync
+		ld	(hl),tile_border_bl
+		add	hl,de
+		dec	hl
+		ld	(hl),tile_border_br
+
+		dec	hl
+		push	hl
+		ld	de,screen_cols-3
+		sbc	hl,de
+		pop	de
+		ld	b,(screen_cols/2)-1
+		ld	a,tile_border_lr
+draw_border_bottom:
+		call	wait_vsync
+		ld	(hl),tile_border_lr
+		ld	(de),a
+		inc	hl
+		dec	de
+		djnz	draw_border_bottom
+draw_border_snippet:
+		call	wait_vsync
+		ld	hl,vram_base+(screen_cols/2)
+		ld	(hl),tile_border_lr
+		call	wait_vsync
+		dec	hl
+		ld	(hl),tile_border_sl
+		inc	hl
+		inc	hl
+		ld	(hl),tile_border_sr
+		
+draw_scores:
+		ld	de,vram_base+4
+		ld	hl,txt_score
+		call	write_text
+		ld	de,vram_base+(screen_cols/2)+3
+		ld	hl,txt_high
+		call	write_text
+		jp	draw_scores
+
 
 ; DE: VRAM offset of top-left corner.
 ; HL: address of map data (x size, y size, data...)
@@ -153,13 +250,28 @@ write_char:
 write_text_end:
 		ret
 
-wait_for_vsync:
+; A: tile to clear with
+
+clear_vram:
+		ld	hl,vram_base
+		ld	b,screen_cols
+		ld	d,screen_rows
+clear_vram_loop:
+		ld	(hl),a
+		inc	hl
+    		djnz	clear_vram_loop
+		dec	d
+		ld	b,screen_cols
+		jp	nz,clear_vram_loop
+		ret	
+
+wait_vsync:
 		halt
 		ret
 
 ; Screen maps
 logo_map:
-		defb	18, 6						; x, y
+		defb	18, 6	; x, y
 		defb	144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161
 		defb	162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179
 		defb	180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197
