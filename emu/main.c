@@ -7,7 +7,7 @@
 #include "z80emu/z80emu.h"
 
 #define Z80_CPU_SPEED       (20 * 1000 * 1000) /* In Hz. */
-#define Z80_CYCLES_PER_STEP (Z80_CPU_SPEED / 60 / 100)
+#define Z80_CYCLES_PER_STEP (Z80_CPU_SPEED / 60 / 50)
 Z80_STATE z80_state;
 
 int main(int argc, char* argv[]) {
@@ -42,6 +42,8 @@ int main(int argc, char* argv[]) {
   z80_state.pc = 0;
 
   while (input_quit() == 0) {
+    z80_cycles += Z80Emulate(&z80_state, Z80_CYCLES_PER_STEP);
+
     vpu_draw_screen();
 
     video_flip();
@@ -49,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     input_process();
 
-    z80_cycles += Z80Emulate(&z80_state, Z80_CYCLES_PER_STEP);
+    Z80NonMaskableInterrupt (&z80_state);
 
     frame++;
   }

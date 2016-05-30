@@ -189,10 +189,10 @@ void input_process() {
     }
   }
 
-  io_write(INPUT_CONTROLLER_BASE,   controller_status[0][0]);
-  io_write(INPUT_CONTROLLER_BASE+1, controller_status[0][1]);
-  io_write(INPUT_CONTROLLER_BASE+2, controller_status[1][0]);
-  io_write(INPUT_CONTROLLER_BASE+3, controller_status[1][1]);
+  io_set(INPUT_CONTROLLER_BASE,   controller_status[0][0]);
+  io_set(INPUT_CONTROLLER_BASE+1, controller_status[0][1]);
+  io_set(INPUT_CONTROLLER_BASE+2, controller_status[1][0]);
+  io_set(INPUT_CONTROLLER_BASE+3, controller_status[1][1]);
 }
 
 int input_quit() {

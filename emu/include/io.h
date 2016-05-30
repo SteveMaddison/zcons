@@ -10,4 +10,6 @@ int io_init();
 uint8_t io_read(unsigned int address);
 void io_write(unsigned int address, uint8_t data);
 
+void io_set(unsigned int address, uint8_t data);
+
 #endif

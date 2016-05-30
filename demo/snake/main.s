@@ -31,7 +31,7 @@ screen_rows:	equ 	30
 
 
 init:		org	0			; program starts at 0x0000
-		di				; turn off interrupts
+		ei				; enable interrupts
 		ld	sp,0x0000		; first push will make this 0xfffe
 		jp	start
 
@@ -75,8 +75,9 @@ write_push_start:
 		pop	de
 		ld	hl,txt_push_start
 		call	write_text
-loop_written:
+
 		ld	b,30
+loop_written:
 		call	wait_for_vsync
 		djnz	loop_written
 clear_push_start:
@@ -85,13 +86,15 @@ clear_push_start:
 		add	hl,de
 		ld	de,(screen_cols-10)/2
 		add	hl,de
+
 		ld	b,10
 clear_letter:
 		ld	(hl),0
 		inc hl
 		djnz	clear_letter
-loop_cleared:
+
 		ld	b,30
+loop_cleared:
 		call	wait_for_vsync
 		djnz	loop_cleared
 

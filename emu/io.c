@@ -15,4 +15,13 @@ uint8_t io_read(unsigned int address) {
 
 void io_write(unsigned int address, uint8_t data) {
   io_port[address & (IO_PORTS-1)] = data;
+
+  /* Magic debug port */
+  if ((address & (IO_PORTS-1)) == 0xff) {
+    printf("DEBUG: %02x (%d)\n", data, data);
+  }
+}
+
+void io_set(unsigned int address, uint8_t data) {
+  io_port[address & (IO_PORTS-1)] = data;
 }

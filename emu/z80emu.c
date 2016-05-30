@@ -150,6 +150,9 @@ int Z80Interrupt (Z80_STATE *state, int data_on_bus)
 
 int Z80NonMaskableInterrupt (Z80_STATE *state)
 {
+	if (state->status & Z80_STATUS_FLAG_HALT) {
+		state->pc++;
+	}
         state->status = 0;
 
         state->iff2 = state->iff1;
@@ -1220,9 +1223,9 @@ emulate_next_instruction:
 
                         case HALT: {
 
-#ifdef Z80_CATCH_HALT
 
                                 state->status |= Z80_STATUS_FLAG_HALT;
+#ifdef Z80_CATCH_HALT
                                 goto stop_emulation;
 
 #else
