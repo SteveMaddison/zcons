@@ -15,6 +15,12 @@ tile_border_br:	equ	6
 tile_border_sr:	equ	7
 tile_border_sl:	equ	8
 
+tile_body:	equ	9
+tile_head_up:	equ	10
+tile_head_down:	equ	11
+tile_head_left:	equ	12
+tile_head_right:equ	13
+
 ; Controller staes
 control_up:	equ	0x01
 control_down:	equ	0x02
@@ -35,10 +41,28 @@ p2_port_h:	equ	0x23
 ; screen co-ordinates
 vram_base:	equ	0xf000
 
-screen_cols:	equ 	40
-screen_rows:	equ 	30
+vram_x:		equ	40
+vram_y:		equ	30
 
+screen_border_x:equ	1
+screen_border_y:equ	1
 
+screen_cols:	equ 	vram_x-(screen_border_x*2)
+screen_rows:	equ 	vram_y-(screen_border_y*2)
+screen_top_left:equ	vram_base + vram_x + screen_border_x
+
+; variables
+ram_base:		equ	0x8000
+snake_buffer:		equ	ram_base
+snake_buffer_size:	equ	(screen_cols-2)*(screen_rows-2)
+
+snake_head:		equ	snake_buffer+snake_buffer_size-1
+snake_tail:		equ	snake_head+2
+
+score:			equ	snake_tail+2
+var_end:		equ	score+2
+
+; Start main program
 init:		org	0			; program starts at 0x0000
 		ei				; enable interrupts
 		ld	sp,0x0000		; first push will make this 0xfffe
@@ -52,8 +76,8 @@ txt_game_over:	defm	"GAME OVER\0"
 txt_high_scores:
 		defm	"HIGH SCORES\0"
 txt_ready:	defm	"READY\0"
-txt_score:	defm	"SCORE XXXXXXXX\0"
-txt_high:	defm	"HIGH XXXXXXXX\0"
+txt_score:	defm	"SCORE 00000000\0"
+txt_high:	defm	"HIGH 00000000\0"
 
 pad_to_nim:	defm	"0123456789"
 
@@ -64,8 +88,8 @@ start:
 		ld	a,0
 		call	clear_vram
 draw_logo:
-		ld      hl,vram_base		; get start P1 map
-		ld	de,screen_cols*10
+		ld      hl,screen_top_left	; get vram to place map
+		ld	de,vram_x*8
 		add	hl,de
 		ld	de,(screen_cols-18)/2
 		add	hl,de
@@ -76,8 +100,8 @@ draw_logo:
 
 flash_push_start:
 write_push_start:
-		ld      hl,vram_base		; write text
-		ld	de,screen_cols*20
+		ld      hl,screen_top_left	; write text
+		ld	de,vram_x*20
 		add	hl,de
 		ld	de,(screen_cols-10)/2
 		add	hl,de
@@ -94,8 +118,8 @@ loop_written:
 		jp	nz,start_pushed
 		djnz	loop_written
 clear_push_start:
-		ld      hl,vram_base		; clear text
-		ld	de,screen_cols*20
+		ld      hl,screen_top_left	; clear text
+		ld	de,vram_x*20
 		add	hl,de
 		ld	de,(screen_cols-10)/2
 		add	hl,de
@@ -124,19 +148,19 @@ start_pushed:
 		ld	a,0
 		call	clear_vram
 draw_border:
-		ld	hl,vram_base+2
-		ld	de,vram_base+screen_cols-3
+		ld	hl,screen_top_left+2
+		ld	de,screen_top_left+screen_cols-3
 		ld	(hl),tile_border_sr
 		ld	a,tile_border_sl
 		ld	(de),a
-		call	wait_vsync
+;		call	wait_vsync
 
 		dec	hl
 		inc	de
 		ld	(hl),tile_border_lr
 		ld	a,tile_border_lr
 		ld	(de),a
-		call	wait_vsync
+;		call	wait_vsync
 
 		dec	hl
 		inc	de
@@ -145,21 +169,22 @@ draw_border:
 		ld	(de),a
 
 		ld	b,screen_rows-2
-		ld	hl,vram_base+screen_cols
-		ld	de,screen_cols
+		ld	hl,screen_top_left+vram_x
 draw_border_down:
-		call	wait_vsync
+;		call	wait_vsync
+		ld	(hl),tile_border_tb
+		ld	de,vram_x
+		add	hl,de
+		ld	de,(screen_border_x*2)+1
+		sbc	hl,de
 		ld	(hl),tile_border_tb
 		add	hl,de
-		dec	hl
-		ld	(hl),tile_border_tb
-		inc	hl
 		djnz	draw_border_down
 draw_border_bottom_corners:
-		call	wait_vsync
+;		call	wait_vsync
 		ld	(hl),tile_border_bl
+		ld	de,screen_cols-1
 		add	hl,de
-		dec	hl
 		ld	(hl),tile_border_br
 
 		dec	hl
@@ -170,32 +195,47 @@ draw_border_bottom_corners:
 		ld	b,(screen_cols/2)-1
 		ld	a,tile_border_lr
 draw_border_bottom:
-		call	wait_vsync
-		ld	(hl),tile_border_lr
+;		call	wait_vsync
+		ld	(hl),a
 		ld	(de),a
 		inc	hl
 		dec	de
 		djnz	draw_border_bottom
-draw_border_snippet:
+
+start_game:		
 		call	wait_vsync
-		ld	hl,vram_base+(screen_cols/2)
-		ld	(hl),tile_border_lr
-		call	wait_vsync
-		dec	hl
-		ld	(hl),tile_border_sl
+		ld	hl,0
+		ld	(score),hl
+		call	draw_scores
+init_new_snake:
+		ld	hl,snake_buffer		; point head and tail to first
+		ld	(snake_head),hl		; slot in buffer.
+		ld	(snake_tail),hl
+		ld	de,screen_top_left+(vram_x*screen_rows/2)+(screen_cols/2)
+		ld	hl,snake_head
+		ld	(hl),e
 		inc	hl
-		inc	hl
-		ld	(hl),tile_border_sr
-		
+		ld	(hl),d
+		push	de
+		pop	hl
+		ld	(hl),tile_head_right
+loop:
+		jp	loop	
+
 draw_scores:
-		ld	de,vram_base+4
+		ld	de,screen_top_left+4
 		ld	hl,txt_score
 		call	write_text
-		ld	de,vram_base+(screen_cols/2)+3
+
+		ld	hl,(score)
+		ld	de,screen_top_left+4+6+8
+		call	write_number
+
+		ld	de,screen_top_left+screen_cols-17
 		ld	hl,txt_high
 		call	write_text
-		jp	draw_scores
 
+		ret
 
 ; DE: VRAM offset of top-left corner.
 ; HL: address of map data (x size, y size, data...)
@@ -216,7 +256,7 @@ draw_map_col:
 
 		pop	de			; get start of row
 		push	hl			; move down one row
-		ld	hl,screen_cols
+		ld	hl,vram_x
 		add	hl,de
 		push	hl
 		pop	de
@@ -233,15 +273,24 @@ draw_map_col:
 ; HL: address of text, NUL-terminated 
 write_text:
 		ld	a,(hl)
-		or	a,0
+		cp	0
 		jp	z,write_text_end
 
-		sub	a,65			; ASCII 'A'
+		cp	65
 		jp	nc,is_letter
+		cp	48
+		jp	nc,is_number
+no_char:
 		ld	a,0
 		jp	write_char
+is_number:	
+		sub	a,48
+		add	a,tile_number_0
+		jp	write_char
 is_letter:	
+		sub	a,65
 		add	a,tile_letter_a
+		jp	write_char
 write_char:
 		ld	(de),a
 		inc	hl
@@ -250,18 +299,66 @@ write_char:
 write_text_end:
 		ret
 
-; A: tile to clear with
+; DE: VRAM offset of rightmost digit.
+; HL: 16-bit number 
+write_number:
+		push	de		; save VRAM address
+		push	hl
+		pop	bc
+write_number_div:
+		ld	de,10		; set divisor
+		call	int_div_16
+		ld	a,tile_number_0
+		add	a,l
+		pop	de
+		ld	(de),a
+		dec	de
+		push	de		; for next time
+		ld	a,b
+		or	c
+		jp	nz,write_number_div
+write_number_end:
+		pop	de
+		ret
 
+; Divide two 16-bit integers with 16-bit result
+; In:   BC = dividend, DE = divisor
+; Out:  BC = quotient, HL = remainder
+int_div_16:
+                push    af
+                ld      hl,0
+                ld      a,b
+                ld      b,16
+int_div_16_loop:
+                rl      c
+                rla
+                adc     hl,hl
+                sbc     hl,de
+                jr      nc,int_div_16_no_add
+                add     hl,de
+int_div_16_no_add:
+                djnz    int_div_16_loop
+                rl      c
+                rla
+                cpl
+                ld      b,a
+                ld      a,c
+                cpl
+                ld      c,a
+                pop     af
+                ret
+
+; A: tile to clear with
 clear_vram:
 		ld	hl,vram_base
-		ld	b,screen_cols
-		ld	d,screen_rows
+		ld	b,vram_x
+		ld	d,vram_y
 clear_vram_loop:
 		ld	(hl),a
 		inc	hl
     		djnz	clear_vram_loop
 		dec	d
-		ld	b,screen_cols
+		ld	b,vram_x
 		jp	nz,clear_vram_loop
 		ret	
 
