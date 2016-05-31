@@ -267,7 +267,7 @@ loop:
 		ld	hl,(score)
 		inc	hl
 		ld	(score),hl
-		call	draw_scores
+		call	update_scores
 		
 		jp	loop	
 
@@ -276,13 +276,13 @@ draw_scores:
 		ld	hl,txt_score
 		call	write_text
 
-		ld	hl,(score)
-		ld	de,screen_top_left+17
-		call	write_number
-
 		ld	de,screen_top_left+screen_cols-17
 		ld	hl,txt_high
 		call	write_text
+update_scores:
+		ld	hl,(score)
+		ld	de,screen_top_left+17
+		call	write_number
 
 		ret
 
