@@ -210,16 +210,65 @@ start_game:
 init_new_snake:
 		ld	hl,snake_buffer		; point head and tail to first
 		ld	(snake_head),hl		; slot in buffer.
-		ld	(snake_tail),hl
 		ld	de,screen_top_left+(vram_x*screen_rows/2)+(screen_cols/2)
-		ld	hl,snake_head
+		ld	hl,snake_buffer
 		ld	(hl),e
 		inc	hl
 		ld	(hl),d
 		push	de
 		pop	hl
 		ld	(hl),tile_head_right
+
+		ld	b,4
+		ld	hl,snake_buffer+2
+fill_new_snake:
+		ld	(snake_tail),hl
+		dec	de			; draw towards left
+		ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+		push	hl
+		push	de
+		pop	hl
+		ld	(hl),tile_body
+		pop	hl
+		djnz	fill_new_snake
+
+		ld	hl,snake_head
+		ld	a,(hl)
+		out	(0xff),a
+		inc	hl
+		ld	a,(hl)
+		out	(0xff),a
+
+		ld	hl,snake_tail
+		ld	a,(hl)
+		out	(0xff),a
+		inc	hl
+		ld	a,(hl)
+		out	(0xff),a
+		
+		ld	b,16
+		ld	hl,snake_buffer
+dump_snake:
+		ld	a,(hl)
+		out	(0xff),a
+		inc	hl
+		djnz	dump_snake
+
+wait_first_direction:
+		in	a,(p1_port_h)
+		and	(control_up|control_down|control_left|control_right)
+		jp	z,wait_first_direction
+
 loop:
+		call	wait_vsync
+		ld	hl,(score)
+		inc	hl
+		ld	(score),hl
+		call	draw_scores
+		
 		jp	loop	
 
 draw_scores:
@@ -228,7 +277,7 @@ draw_scores:
 		call	write_text
 
 		ld	hl,(score)
-		ld	de,screen_top_left+4+6+8
+		ld	de,screen_top_left+17
 		call	write_number
 
 		ld	de,screen_top_left+screen_cols-17
